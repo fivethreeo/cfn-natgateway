@@ -9,7 +9,7 @@ var Delete = CfnLambda.SDKAlias({
   api: EC2,
   method: 'deleteNatGateway',
   ignoreErrorCodes: [404, 409],
-  keys: ['NatGatewayId'],
+  keys: ['SubnetId', 'AllocationId'],
   returnPhysicalId: getPhysicalId
 });
 
