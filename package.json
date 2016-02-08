@@ -1,0 +1,39 @@
+{
+  "name": "cfn-natgateway",
+  "version": "0.1.1",
+  "description": "AWS CloudFormation Custom Lambda Resource | AWS Natgateway",
+  "main": "index.js",
+  "scripts": {
+    "cfn-lambda-deploy": "node ./node_modules/cfn-lambda/deploy.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fivethreeo/cfn-natgateway.git"
+  },
+  "keywords": [
+    "aws",
+    "cloudformation",
+    "lambda",
+    "backed",
+    "custom",
+    "resource",
+    "nat",
+    "natgateway",
+    "vpc",
+    "ec2",
+    "domain"
+  ],
+  "author": {
+    "name": "Øyvind Saltvik",
+    "email": "oyvimd.saltvik@gmail.com",
+    "url": "https://github.com/fivethreeo"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fivethreeo/cfn-natgateway/issues"
+  },
+  "homepage": "https://github.com/fivethreeo/cfn-natgateway/#readme",
+  "dependencies": {
+    "cfn-lambda": "0.8.0"
+  }
+}
