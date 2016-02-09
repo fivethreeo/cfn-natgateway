@@ -82,10 +82,39 @@ This Lambda makes use of the Lambda-Backed CloudFormation Custom Resource flow m
           "Fn::GetAtt": [ "MyEIP", "AllocationId"]
         }
       }
-    }
+    },
 
+    "PrivateRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [{
+          "Key": "Application",
+          "Value": {
+            "Ref": "AWS::StackId"
+          }
+        }, {
+          "Key": "Network",
+          "Value": "Private"
+        }]
+      }
+    },
 
-
+    "PrivateRoute": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "MyNatgateway",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "MyNatgateway"
+        }
+      }
+    },
 ## Installation of the Resource Service Lambda
 
 #### Using the Provided Instant Install Script
