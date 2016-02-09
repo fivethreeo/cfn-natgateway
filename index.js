@@ -9,8 +9,9 @@ var Delete = CfnLambda.SDKAlias({
   api: EC2,
   method: 'deleteNatGateway',
   ignoreErrorCodes: [404, 409],
-  keys: ['SubnetId', 'AllocationId'],
-  returnPhysicalId: getPhysicalId
+  keys: ['NatGatewayId'],
+  physicalIdAs: 'NatGatewayId', 
+  returnPhysicalId: getPhysicalIdDelete
 });
 
 var BoolProperties = [
@@ -24,31 +25,28 @@ var Create = CfnLambda.SDKAlias({
   method: 'createNatGateway',
   forceBools: BoolProperties,
   forceNums: NumProperties,
-  returnPhysicalId: getPhysicalId
-});
-
-var Update = CfnLambda.SDKAlias({ // Won't be triggered, but is required
-  api: EC2,
-  method: 'createNatGateway',
-  forceBools: BoolProperties,
-  forceNums: NumProperties,
+  keys: ['SubnetId', 'AllocationId'],
   returnPhysicalId: getPhysicalId
 });
 
 function getPhysicalId(data, params) {
-  return CfnLambda.Environment.AccountId + '/' + params.SubnetId + '/' + params.AllocationId;
+  return data.NatGateway.NatGatewayId
+}
+
+function getPhysicalIdDelete(data, params) {
+  return data.NatGatewayId
 }
 
 exports.handler = CfnLambda({
   Create: Create,
-  Update: NoUpdate,
+  Update: Create,
   Delete: Delete,
   NoUpdate: NoUpdate,
   TriggersReplacement: ['SubnetId', 'AllocationId'],
   SchemaPath: [__dirname, 'schema.json'],
   LongRunning: {
-    PingInSeconds: 180,
-    MaxPings: 15,
+    PingInSeconds: 60,
+    MaxPings: 10,
     LambdaApi: Lambda,
     Methods: {
       Create: CheckCreate,
@@ -58,14 +56,10 @@ exports.handler = CfnLambda({
   }
 });
 
-function CheckProcessComplete(params, reply, notDone) {
+function CheckProcessComplete(params, physicalId, reply, notDone) {
   EC2.describeNatGateways({
-    Filter: [{
-      Name: 'subnet-id',
-      Values:[params.SubnetId]
-    }],
-    MaxResults: 1,
-    NatGatewayIds: [getPhysicalId({}, params)]
+    NatGatewayIds: [physicalId],
+    MaxResults: 5
   }, function(err, data) {
     if (err) {
       console.error('Error when pinging for Processing Complete: %j', err);
@@ -76,31 +70,27 @@ function CheckProcessComplete(params, reply, notDone) {
       return reply(data.NatGateways[0].FailureMessage);
     }
     if (data.NatGateways[0].State == "pending") {
-      console.log('Status is not Processing: false yet. Ping not done: %j', data);
+      console.log('Status is not State: available yet. Ping not done: %j', data);
       return notDone();
     }
     console.log('Status is Processing: false! %j', data);
-    reply(null, data.NatGateways[0].NatGatewayId, {
+    reply(null, physicalId, {
     });
   });
 }
 
 function CheckCreate(createReponse, params, reply, notDone) {
-  CheckProcessComplete(params, reply, notDone);
+  CheckProcessComplete(params, createReponse.PhysicalResourceId, reply, notDone);
 }
 
 function CheckUpdate(updateResponse, physicalId, params, oldParams, reply, notDone) {
-  CheckProcessComplete(params, reply, notDone);
+  CheckProcessComplete(params, physicalId, reply, notDone);
 }
 
 function CheckDelete(deleteResponse, physicalId, params, reply, notDone) {
   EC2.describeNatGateways({
-    Filter: [{
-      Name: 'subnet-id',
-      Values:[params.SubnetId]
-    }],
-    MaxResults: 1,
-    NatGatewayIds: [getPhysicalId({}, params)]
+    NatGatewayIds: [physicalId],
+    MaxResults: 5
   }, function(err, data) {
     if (err && (err.statusCode === 404 || err.statusCode === 409)) {
       console.log('Got a 404 on delete check, implicit Delete SUCCESS: %j', err);
@@ -115,25 +105,20 @@ function CheckDelete(deleteResponse, physicalId, params, reply, notDone) {
       return notDone();
     }
     console.log('Status is Deleted! %j', data);
-    reply(null, data.NatGateways[0].NatGatewayId);
+    reply(null, physicalId);
   });
 }
 
 function NoUpdate(phys, params, reply) {
-  EC2.describeElasticsearchDomain({
-    Filter: [{
-      Name: 'subnet-id',
-      Values:[params.SubnetId]
-    }],
-    MaxResults: 1,
-    NatGatewayIds: [getPhysicalId({}, params)]
+  EC2.describeNatGateways({
+    NatGatewayIds: [phys],
+    MaxResults: 1
   }, function(err, data) {
     if (err) {
       console.error('Error when pinging for NoUpdate Attrs: %j', err);
       return reply(err.message);
     }
     console.log('NoUpdate pingcheck success! %j', data);
-    reply(null, data.NatGateways[0].NatGatewayId, {
-    });
+    reply(null, phys);
   });
 }
