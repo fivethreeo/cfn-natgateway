@@ -1,13 +1,13 @@
 
-# cfn-elasticsearch-domain
+# cfn-natgateway
 
 
 ## Purpose
 
-AWS CloudFormation does not support AWS Elasticsearch Service. This is a Lambda-backed custom resource to add support for [AWS Elasticsearch Service](https://aws.amazon.com/elasticsearch-service/) to CloudFormation.
+AWS CloudFormation does not support AWS Managed nat. This is a Lambda-backed custom resource to add support for [AWS Managed nat](https://aws.amazon.com/elasticsearch-service/) to CloudFormation.
 
-[This package on NPM](https://www.npmjs.com/package/cfn-elasticsearch-domain)  
-[This package on GitHub](https://www.github.com/andrew-templeton/cfn-elasticsearch-domain)
+[This package on NPM](https://www.npmjs.com/package/cfn-natgateway)  
+[This package on GitHub](https://www.github.com/fivethreeo/cfn-natgateway)
 
 
 ## Implementation
@@ -16,6 +16,88 @@ This Lambda makes use of the Lambda-Backed CloudFormation Custom Resource flow m
 
 
 ## Usage
+
+    "MyNatgateway": {
+      "Type": "Custom::Natgateway",
+      "DependsOn": "MyEIP",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::Join": [
+            ":",
+            [
+              "arn",
+              "aws",
+              "lambda",
+              {
+                "Ref": "AWS::Region"
+              },
+              {
+                "Ref": "AWS::AccountId"
+              },
+              "function",
+              "cfn-natgateway-0-1-1"
+            ]
+          ]
+        },
+        "SubnetId": {
+          "Ref": "PublicSubnet"
+        },
+        "AllocationId": {
+          "Fn::GetAtt": [ "MyEIP", "AllocationId"]
+        }
+      }
+    },
+
+    "PrivateRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "DependsOn": "MyNatgateway2",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [{
+          "Key": "Application",
+          "Value": {
+            "Ref": "AWS::StackId"
+          }
+        }, {
+          "Key": "Network",
+          "Value": "Private"
+        }]
+      }
+    },
+
+    "PrivateRoute": {
+      "Type": "Custom::Natroute",
+      "DependsOn": "MyNatgateway",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::Join": [
+            ":",
+            [
+              "arn",
+              "aws",
+              "lambda",
+              {
+                "Ref": "AWS::Region"
+              },
+              {
+                "Ref": "AWS::AccountId"
+              },
+              "function",
+              "cfn-natroute-0-1-1"
+            ]
+          ]
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "MyNatgateway"
+        }
+      }
+    },
 
   See [`./example.template.json`](./example.template.json) for a sample CloudFormation template. The example uses `Condition` statements, `Parameters`, and dynamic `ServiceToken` generation fully.
 

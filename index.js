@@ -45,7 +45,7 @@ exports.handler = CfnLambda({
   TriggersReplacement: ['SubnetId', 'AllocationId'],
   SchemaPath: [__dirname, 'schema.json'],
   LongRunning: {
-    PingInSeconds: 280,
+    PingInSeconds: 60,
     MaxPings: 10,
     LambdaApi: Lambda,
     Methods: {
