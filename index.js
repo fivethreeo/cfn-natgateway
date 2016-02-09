@@ -45,7 +45,7 @@ exports.handler = CfnLambda({
   TriggersReplacement: ['SubnetId', 'AllocationId'],
   SchemaPath: [__dirname, 'schema.json'],
   LongRunning: {
-    PingInSeconds: 60,
+    PingInSeconds: 280,
     MaxPings: 10,
     LambdaApi: Lambda,
     Methods: {
@@ -74,8 +74,7 @@ function CheckProcessComplete(params, physicalId, reply, notDone) {
       return notDone();
     }
     console.log('Status is Processing: false! %j', data);
-    reply(null, physicalId, {
-    });
+    reply(null, physicalId, data.NatGateways[0].NatGatewayAddresses[0]);
   });
 }
 
@@ -119,6 +118,6 @@ function NoUpdate(phys, params, reply) {
       return reply(err.message);
     }
     console.log('NoUpdate pingcheck success! %j', data);
-    reply(null, phys);
+    reply(null, phys, data.NatGateways[0].NatGatewayAddresses.NatGatewayAddresses[0]);
   });
 }
