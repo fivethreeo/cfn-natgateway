@@ -99,9 +99,6 @@ This Lambda makes use of the Lambda-Backed CloudFormation Custom Resource flow m
       }
     },
 
-  See [`./example.template.json`](./example.template.json) for a sample CloudFormation template. The example uses `Condition` statements, `Parameters`, and dynamic `ServiceToken` generation fully.
-
-
 ## Installation of the Resource Service Lambda
 
 #### Using the Provided Instant Install Script
@@ -109,10 +106,10 @@ This Lambda makes use of the Lambda-Backed CloudFormation Custom Resource flow m
 The way that takes 10 seconds...
 
     # Have aws CLI installed + permissions for IAM and Lamdba
-    $ npm run cfn-lambda-deploy
+    $ npm install cfn-lambda cfn-natgateway cfn-natroute
+    $ node -e "var r='us-east-1';var c=require('cfn-lambda');c.deploy('cfn-natgateway', r, [r], null);c.deploy('cfn-natroute', r, [r], null);"
 
-
-You will have this resource installed in every supported Region globally!
+You will have this resource installed in the us-east-1 region!
 
 
 #### Using the AWS Console
@@ -137,12 +134,11 @@ You will have this resource installed in every supported Region globally!
 7. Set the Timeout under Advanced Settings to 10 sec
 8. Click the Role dropdown then click "Basic Execution Role". This will pop out a new window.
 9. Select IAM Role, then select option "Create a new IAM Role"
-10. Name the role `lambda_cfn_elasticsearch_domain` (or something descriptive)
+10. Name the role `lambda_cfn_natgateway` (or something descriptive)
 11. Click "View Policy Document", click "Edit" on the right, then hit "OK"
 12. Copy and paste the [`./execution-policy.json`](./execution-policy.json) document.
 13. Hit "Allow". The window will close. Go back to the first window if you are not already there.
-14. Click "Create Function". Finally, done! Now go to [Usage](#usage) or see [the example template](./example.template.json). Next time, stick to the instant deploy script.
-
+14. Click "Create Function". Finally, done! Now go to [Usage](#usage). Next time, stick to the instant deploy script.
 
 #### Miscellaneous
 
